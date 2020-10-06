@@ -23,7 +23,7 @@ public class App
         port(getPort());
         System.out.println(model.get("root"));
 
-        secure("keystore/ecikeystore.p12", "matrixa033", null, null);
+        secure("keystore/ecikeystore.p12", "", null, null);
         get("/", (req, res) -> logIn(req, res));
 
         before("/calcular",new Filter() {
