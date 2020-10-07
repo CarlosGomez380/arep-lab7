@@ -1,12 +1,17 @@
 package edu.escuelaing.lab6;
 
+import org.json.JSONObject;
 import spark.Filter;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.nio.file.Path;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -40,6 +45,8 @@ public class App
         });
 
         get("/calcular",(req, res) -> inputDataPage(req, res));
+
+        get("/results", (req, res) -> resultsPage(req, res));
     }
 
     public static String getSHA512(String input){
@@ -93,6 +100,53 @@ public class App
                 + "</body>"
                 + "</html>";
         return pageContent;
+    }
+
+    private static JSONObject resultsPage(Request req, Response res) throws IOException {
+
+        String operator= req.queryParams("operacion");
+        String radian= req.queryParams("number");
+
+        String url = "https://damp-springs-33229.herokuapp.com/results?number="+radian+
+                "&operacion="+operator;
+
+        //Llamado al servicio
+        String respuesta=probarServicio(url);
+
+        String ans=respuesta;
+        int inicio=ans.lastIndexOf("[");
+        int end= ans.lastIndexOf("]");
+        System.out.println(ans.substring(inicio+1,end));
+        Double number=Double.parseDouble(ans.substring(inicio+1,end));
+
+        JSONObject json= new JSONObject();
+        json.append("Operator",operator);
+        json.append("Result",number);
+        return json;
+    }
+
+    public static String probarServicio(String url) throws IOException {
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        // optional default is GET
+        con.setRequestMethod("GET");
+
+        int responseCode = con.getResponseCode();
+        System.out.println("\nSending 'GET' request to URL : " + url);
+        System.out.println("Response Code : " + responseCode);
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        System.out.println(response.toString());
+        in.close();
+        return response.toString();
     }
 
     static int getPort() {
